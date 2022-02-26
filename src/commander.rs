@@ -1,8 +1,9 @@
-use std::io::stdin;
 use std::thread::sleep;
 use std::time::Duration;
 use crate::repository::Repository;
 use crate::person::Person;
+use crate::utils;
+use crate::storage::fill_storage_by_person_vector;
 
 pub struct Commander {
     repository: Repository
@@ -16,77 +17,68 @@ impl Commander {
     }
 
     pub unsafe fn resolve_command(&mut self, command: &str) {
-        let first_word: &str = command.split(" ").collect::<Vec<&str>>()[0];
-
         self.repository.fill_person();
+        fill_storage_by_person_vector(self.repository.get_all());
 
-        match first_word.trim() {
-            "Buscar" => self.resolve_search_command(command),
-            "Atualizar" => self.resolve_update_command(command),
-            "Apagar" => self.resolve_delete_command(command),
-            "Cadastrar" => self.resolve_create_command(command),
+        match command.trim() {
+            "Buscar" => self.resolve_search_command(),
+            "Atualizar" => self.resolve_update_command(),
+            "Apagar" => self.resolve_delete_command(),
+            "Cadastrar" => self.resolve_create_command(),
             &_ => panic!("Comando não encontrado!")
+        };
+
+        sleep(Duration::from_secs(3));
+    }
+
+    pub fn resolve_search_command(&mut self) {
+        let param = utils::get_i16_param("ID");
+
+        match self.repository.get_by_id(param) {
+            Ok(res) => println!("{}", res),
+            Err(msg) => println!("{}", msg)
         }
     }
 
-    pub fn resolve_search_command(&self, command: &str) {
-        let by: Vec<&str> = command.split(" ").collect();
+    pub fn resolve_update_command(&mut self) {
+        let param = utils::get_i16_param("ID");
+        let repo = &mut self.repository;
 
-        if by.contains(&"ID") {
-            let param = Commander::get_string_param("ID");
-
-            println!("{}", self.repository.get_by_id(param));
-            sleep(Duration::from_secs(3));
+        match repo.get_by_id(param) {
+            Ok(res) => {
+                let p = Commander::create_new_person(0);
+                Repository::update_by_id(res, p);
+            },
+            Err(msg) => println!("{}", msg)
         }
     }
 
-    pub fn resolve_update_command(&self, command: &str) {
+    pub unsafe fn resolve_delete_command(&mut self) {
+        let param = utils::get_i16_param("ID");
 
-    }
-
-    pub fn resolve_delete_command(&self, command: &str) {
-
-    }
-
-    pub unsafe fn resolve_create_command(&mut self, command: &str) {
-        let by: Vec<&str> = command.split(" ").collect();
-
-        if by.contains(&"Funcionário") || by.contains(&"Gestor") {
-            let name = Commander::get_string_param("Nome");
-            let age = Commander::get_i8_param("Idade");
-            let salary = Commander::get_f64_param("Salario");
-
-            self.repository.create_person(Person::new(
-                self.repository.get_person_size() as i16,
-                name,
-                age,
-                salary,
-                if command == "Cadastrar Funcionário" { String::from("FUNCIONARIO") } 
-                else { String::from("GESTOR") } 
-            ))
+        match self.repository.get_by_id(param) {
+            Ok(res) => Repository::delete_by_id(res),
+            Err(msg) => println!("{}", msg)
         }
     }
 
-    fn get_string_param(field: &str) -> String {
-        println!("Digite o {}:", field);
-        let mut param = String::new();
-
-        stdin().read_line(&mut param).expect("Problema ao coletar entrada");
-
-        param
+    pub unsafe fn resolve_create_command(&mut self) {
+        Repository::create_person(
+            Commander::create_new_person(self.repository.get_all().len() as i16));
     }
 
-    fn get_i8_param(field: &str) -> i8 {
-        match Commander::get_string_param(field).trim().parse() {
-            Ok(res) => res,
-            Err(_) => 0
-        }
-    }
+    fn create_new_person(id: i16) -> Person {
+        let name = utils::get_string_param("Nome");
+        let age = utils::get_i8_param("Idade");
+        let salary = utils::get_f64_param("Salario");
+        let position = utils::get_string_param("Função");
 
-    fn get_f64_param(field: &str) -> f64 {
-        match Commander::get_string_param(field).trim().parse() {
-            Ok(res) => res,
-            Err(_) => 0.0
-        }
+        Person::new(
+            id,
+            name,
+            age,
+            salary,
+            position
+        )
     }
 }

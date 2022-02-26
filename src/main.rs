@@ -1,12 +1,16 @@
 mod presenter;
-mod presenter_set;
 mod commander;
 mod repository;
 mod person;
+mod utils;
+mod storage;
+
+use crate::presenter::Presenter;
+use crate::commander::Commander;
 
 fn main() {
-    let mut show = presenter::Presenter::new();
-    let mut command = commander::Commander::new();
+    let mut show = Presenter::new();
+    let mut command = Commander::new();
 
     unsafe {
         loop {
@@ -14,7 +18,6 @@ fn main() {
 
             match show.get_command().as_str() {
                 "Sair" => break,
-                "Voltar" => show.go_back_page(),
                 &_ => command.resolve_command(show.get_command())
             }
         }

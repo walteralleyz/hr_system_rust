@@ -1,58 +1,36 @@
-use std::io::stdin;
-use crate::presenter_set::Set;
+use crate::utils;
 
 pub struct Presenter {
-    page: usize,
     command: String,
-    sets: Vec<Set>
+    options: Vec<&'static str>
 }
 
 impl Presenter {
     pub fn new() -> Self {
         Presenter {
-            page: 0,
-            command: String::from("Start"),
-            sets: Set::get_sets()
+            command: String::from("INICIO"),
+            options: vec!["Sair", "Buscar", "Atualizar", "Cadastrar", "Apagar"]
         }
     }
 
     pub fn show_menu(&mut self) {
-        print!("{}[2J", 27 as char);
-        println!("==================");
-        println!("|{}", self.sets[self.page].get_title());
-
-        for option in self.sets[self.page].get_options() {
-            println!("|{0} - {1}", option.get_index(), option.get_text());
+        println!("{}[2J", 27 as char);
+        println!("============INICIO");
+        
+        for (index, option) in self.options.iter().enumerate() {
+            println!("|{} - {}", index, option);
         }
 
         println!("==================");
 
-        self.change_page_by_user_option();
-    }
+        let option = utils::get_usize_param("Número da Opção");
 
-    pub fn change_page_by_user_option(&mut self) {
-        let mut user_page = String::new();
+        if option > self.options.len()-1 { panic!("Opção inválida!") }
 
-        stdin().read_line(&mut user_page).expect("Deve ser um valor numérico");
-
-        let option = self.get_string_as_usize(user_page);
-
-        self.command = self.sets[self.page].get_options()[option].get_text();
-        self.page = option;
-    }
-
-    pub fn get_string_as_usize(&self, val: String) -> usize {
-        match val.trim().parse() {
-            Ok(res) => res,
-            Err(_) => 0
-        }
+        self.command = String::from(self.options[option]);
     }
 
     pub fn get_command(&self) -> &String {
         &self.command
-    }
-
-    pub fn go_back_page(&mut self) {
-        self.page = 0;
     }
 }

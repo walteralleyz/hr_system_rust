@@ -1,19 +1,5 @@
 use std::fmt;
-
-static mut STORAGE: String = String::new();
-
-pub unsafe fn append_to_storage(p: &Person) {
-    STORAGE.push_str("===PERSONid:");
-    STORAGE.push_str(p.get_id().to_string().as_str());
-    STORAGE.push_str(" name:");
-    STORAGE.push_str(p.get_name());
-    STORAGE.push_str(" age:");
-    STORAGE.push_str(p.get_age().to_string().as_str());
-    STORAGE.push_str(" job_role:");
-    STORAGE.push_str(p.get_salary().to_string().as_str());
-    STORAGE.push_str(",");
-    STORAGE.push_str(p.get_position());
-}
+use crate::storage::STORAGE;
 
 pub struct Person {
     id: i16,
@@ -118,6 +104,22 @@ impl Person {
 
     pub fn get_position(&self) -> &String {
         &self.job_role.position
+    }
+
+    pub fn set_name(&mut self, name: String) {
+        self.name = name;
+    }
+
+    pub fn set_age(&mut self, age: i8) {
+        self.age = age;
+    }
+
+    pub fn set_salary(&mut self, salary: f64) {
+        self.job_role.salary = salary
+    }
+
+    pub fn set_position(&mut self, position: String) {
+        self.job_role.position = position
     }
 }
 
